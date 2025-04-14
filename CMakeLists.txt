@@ -10,3 +10,5 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(caskell src/caskell.cpp)
 
 target_include_directories(caskell PRIVATE include)
+
+add_subdirectory(tests)
