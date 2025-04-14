@@ -2,6 +2,7 @@
 #define CASKELL_LAZYSTREAM_HPP
 
 #include <cstddef>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -123,10 +124,10 @@ public:
 template <typename T> class LazyStream {
   std::shared_ptr<Generator<T>> generator_;
 
+public:
   explicit LazyStream(std::shared_ptr<Generator<T>> gen)
       : generator_(std::move(gen)) {}
 
-public:
   static LazyStream<T> fromRange(T start) {
     return LazyStream<T>(std::make_shared<RangeGenerator<T>>(start));
   }
@@ -184,9 +185,40 @@ public:
     }
   }
 
-  using iterator = typename std::shared_ptr<Generator<T>>::element_type;
+  class Iterator {
+    std::shared_ptr<Generator<T>> generator_;
+    std::optional<T> current_;
 
-  auto begin() { return generator_; }
+  public:
+    using ValueType = T;
+    using Reference = const T &;
+    using Pointer = const T *;
+    using IteratorCategory = std::input_iterator_tag;
+    using DifferenceType = std::ptrdiff_t;
+
+    Iterator(std::shared_ptr<Generator<T>> gen)
+        : generator_(std::move(gen)), current_(generator_->next()) {}
+
+    Iterator() : generator_(nullptr), current_(std::nullopt) {}
+
+    Reference operator*() const { return *current_; }
+    Pointer operator->() const { return &*current_; }
+
+    Iterator &operator++() {
+      current_ = generator_->next();
+      return *this;
+    }
+
+    bool operator==(const Iterator &other) const {
+      return (!current_ && !other.current_);
+    }
+
+    bool operator!=(const Iterator &other) const { return !(*this == other); }
+  };
+
+  auto begin() const { return Iterator(generator_); };
+
+  auto end() const { return Iterator(); }
 };
 
 } // namespace caskell
