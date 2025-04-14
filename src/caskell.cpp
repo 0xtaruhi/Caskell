@@ -1,5 +1,6 @@
 #include "caskell.hpp"
 #include <iostream>
+#include <list>
 #include <utility>
 #include <vector>
 
@@ -58,10 +59,11 @@ int main() {
                         .map([](int x) { return x * x; })
                         .filter([](int x) { return x % 3 == 0; })
                         .map([](int x) { return std::make_pair(x, x + 1); })
-                        .take(5);
+                        .take(5)
+                        .collect<std::list<std::pair<int, int>>>();
 
-  for (auto item : lazyResult) {
-    std::cout << item.first << " " << item.second << "   ";
+  for (auto &pair : lazyResult) {
+    std::cout << "(" << pair.first << ", " << pair.second << ") ";
   }
 
   caskell::Maybe<int> m1(10);

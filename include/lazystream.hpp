@@ -4,7 +4,6 @@
 #include <optional>
 #include <type_traits>
 #include <utility>
-#include <vector>
 
 namespace caskell {
 
@@ -39,8 +38,9 @@ template <typename T> struct GeneratorTraits;
 template <typename T> struct GeneratorTraits<RangeGenerator<T>> {
   using ValueType = T;
 };
-template <typename T> struct GeneratorTraits<ContainerGenerator<T>> {
-  using ValueType = T;
+template <typename Container>
+struct GeneratorTraits<ContainerGenerator<Container>> {
+  using ValueType = typename ContainerGenerator<Container>::ValueType;
 };
 
 template <typename Gen, typename Func>
@@ -137,17 +137,18 @@ public:
   std::optional<T> nextImpl() { return current_++; }
 };
 
-template <typename T>
-class ContainerGenerator : public Generator<ContainerGenerator<T>> {
-  using Iterator = typename std::vector<T>::const_iterator;
+template <typename Container>
+class ContainerGenerator : public Generator<ContainerGenerator<Container>> {
+  using Iterator = typename Container::const_iterator;
   Iterator current_, end_;
 
 public:
-  using ValueType = T;
-  ContainerGenerator(Iterator begin, Iterator end)
-      : current_(begin), end_(end) {}
+  using ValueType = typename Container::value_type;
 
-  std::optional<T> nextImpl() {
+  ContainerGenerator(const Container &container)
+      : current_(container.begin()), end_(container.end()) {}
+
+  std::optional<ValueType> nextImpl() {
     if (current_ == end_)
       return std::nullopt;
     return *current_++;
@@ -176,17 +177,33 @@ public:
     return LazyStream<TakenGen>(TakenGen{generator_, n});
   }
 
-  template <typename U, typename Reducer> U reduce(U init, Reducer r) const {
-    while (auto item = generator_->next()) {
+  template <typename U, typename Reducer> U reduce(U init, Reducer r) {
+    while (auto item = generator_.next()) {
       init = r(init, *item);
     }
     return init;
   }
 
-  template <typename Func> void forEach(Func f) const {
-    while (auto item = generator_->next()) {
+  template <typename Func> void forEach(Func f) {
+    while (auto item = generator_.next()) {
       f(*item);
     }
+  }
+
+  template <typename Container> Container collect() {
+    Container container;
+    while (auto item = generator_.next()) {
+      if constexpr (impl::HasMember_push_back<Container>::value) {
+        container.push_back(*item);
+      } else if constexpr (impl::HasMember_insert<Container>::value) {
+        container.insert(container.end(), *item);
+      } else {
+        static_assert(impl::HasMember_push_back<Container>::value ||
+                          impl::HasMember_insert<Container>::value,
+                      "Container must have either push_back or insert method");
+      }
+    }
+    return container;
   }
 
   auto next() { return generator_.next(); }
@@ -202,7 +219,7 @@ public:
     using DifferenceType = std::ptrdiff_t;
 
     explicit Iterator(Gen *gen)
-        : generator_(std::move(gen)), current_(generator_->next()) {}
+        : generator_(gen), current_(generator_->next()) {}
 
     Iterator() : generator_(nullptr), current_(std::nullopt) {}
 
