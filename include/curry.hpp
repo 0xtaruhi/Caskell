@@ -2,6 +2,7 @@
 #ifndef CASKELL_CURRY_HPP
 #define CASKELL_CURRY_HPP
 
+#include <functional>
 #include <tuple>
 #include <utility>
 
@@ -17,12 +18,17 @@ public:
   explicit Curried(F f, std::tuple<Args...> a)
       : func(std::move(f)), args(std::move(a)) {}
 
-  template <typename... NewArgs> auto operator()(NewArgs &&...newArgs) const {
+  template <typename... NewArgs>
+  constexpr auto operator()(NewArgs &&...newArgs) const {
     auto newTuple = std::tuple_cat(
         args, std::forward_as_tuple(std::forward<NewArgs>(newArgs)...));
-    constexpr auto total_args = std::tuple_size<decltype(newTuple)>::value;
     if constexpr (std::is_invocable_v<F, Args..., NewArgs...>) {
-      return std::apply(func, newTuple);
+      return std::apply(
+          [&](auto &&...fullArgs) {
+            return std::invoke(func,
+                               std::forward<decltype(fullArgs)>(fullArgs)...);
+          },
+          newTuple);
     } else {
       return Curried<F, Args..., NewArgs...>(func, newTuple);
     }
@@ -31,11 +37,8 @@ public:
 
 } // namespace impl
 
-template <typename F> auto curry(F f) {
-  return impl::Curried<F>(std::move(f), {});
-}
-
-template <typename F, typename... Args> auto curry(F f, Args &&...args) {
+template <typename F, typename... Args>
+constexpr auto curry(F f, Args &&...args) {
   return impl::Curried<F, Args...>(
       std::move(f), std::forward_as_tuple(std::forward<Args>(args)...));
 }
