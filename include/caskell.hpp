@@ -6,5 +6,6 @@
 #include "maybe.hpp"   // IWYU pragma: keep
 #include "stream.hpp"  // IWYU pragma: keep
 #include "variant.hpp" // IWYU pragma: keep
+#include "lazystream.hpp" // IWYU pragma: keep
 
 #endif // CASKELL_HPP

@@ -103,10 +103,6 @@ template <typename Container> auto stream(Container &&container) {
   return impl::Stream<Container>(std::forward<Container>(container));
 }
 
-template <typename T> class LazyStream {
-  std::unique_ptr<T> data;
-};
-
 } // namespace caskell
 
 #endif // CASKELL_STREAM_HPP

@@ -37,19 +37,26 @@ int main() {
                     .reduce([](int a, int b) { return a + b; }, 0);
   std::cout << "\nResult: " << result << std::endl; // 输出 80
 
+  auto lazyResult = caskell::LazyStream<int>::fromRange(100)
+                        .map([](int x) { return x * x; })
+                        .take(100)
+                        .reduce(0, [](int acc, int x) { return acc + x; });
+  std::cout << "Lazy Result: " << lazyResult << std::endl;
+
   caskell::Maybe<int> m1(10);
   auto r1 = m1 >>= [](int x) { return safe_div(x, 2); };
   std::cout << "Result of safe_div: " << r1.value_or(-1) << std::endl; // 输出 5
   auto r2 = m1.and_then([](int x) { return safe_div(x, 0); });
-  std::cout << "Result of safe_div: " << r2.value_or(-1) << std::endl; // 输出 -1
+  std::cout << "Result of safe_div: " << r2.value_or(-1)
+            << std::endl; // 输出 -1
 
   caskell::Variant<int, float> maybeInt = 42.3f;
-  maybeInt.match(
-      [](int i) { std::cout << "Integer: " << i << std::endl; },
-      [](float f) { std::cout << "Float: " << f << std::endl; });
+  maybeInt.match([](int i) { std::cout << "Integer: " << i << std::endl; },
+                 [](float f) { std::cout << "Float: " << f << std::endl; });
 
   maybeInt = 42;
-  maybeInt.match(
-      [](int i) { std::cout << "Integer: " << i << std::endl; },
-      [](float f) { std::cout << "Float: " << f << std::endl; });
+  maybeInt.match([](int i) { std::cout << "Integer: " << i << std::endl; },
+                 [](float f) { std::cout << "Float: " << f << std::endl; });
+
+  std::vector<int> data = {1, 2, 3, 4, 5, 6};
 }
