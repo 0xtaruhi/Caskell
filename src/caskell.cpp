@@ -54,7 +54,7 @@ int main() {
                     .reduce([](int a, int b) { return a + b; }, 0);
   std::cout << "\nResult: " << result << std::endl; // 输出 80
 
-  auto lazyResult = caskell::LazyStream<int>::fromRange(100)
+  auto lazyResult = caskell::LazyStream(caskell::RangeGenerator<int>(1))
                         .map([](int x) { return x * x; })
                         .filter([](int x) { return x % 3 == 0; })
                         .map([](int x) { return std::make_pair(x, x + 1); })
@@ -63,7 +63,6 @@ int main() {
   for (auto item : lazyResult) {
     std::cout << item.first << " " << item.second << "   ";
   }
-  std::cout << std::endl;
 
   caskell::Maybe<int> m1(10);
   auto r1 = m1 >>= [](int x) { return safe_div(x, 2); };
