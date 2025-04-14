@@ -6,7 +6,30 @@
 #include <optional>
 #include <utility>
 #include <vector>
+
 namespace caskell {
+
+namespace impl {
+
+template <typename T, typename = void>
+struct HasMember_push_back : std::false_type {};
+
+template <typename T>
+struct HasMember_push_back<T,
+                           std::void_t<decltype(std::declval<T &>().push_back(
+                               std::declval<typename T::value_type>()))>>
+    : std::true_type {};
+
+template <typename T, typename = void>
+struct HasMember_insert : std::false_type {};
+
+template <typename T>
+struct HasMember_insert<T, std::void_t<decltype(std::declval<T &>().insert(
+                               std::declval<typename T::iterator>(),
+                               std::declval<typename T::value_type>()))>>
+    : std::true_type {};
+
+} // namespace impl
 
 template <typename T> class Generator {
 public:
@@ -135,7 +158,15 @@ public:
   CollectContainer collect() const {
     CollectContainer result;
     while (auto item = generator_->next()) {
-      result.push_back(std::move(*item));
+      if constexpr (impl::HasMember_push_back<CollectContainer>::value) {
+        result.push_back(*item);
+      } else if constexpr (impl::HasMember_insert<CollectContainer>::value) {
+        result.insert(result.end(), *item);
+      } else {
+        static_assert(impl::HasMember_push_back<CollectContainer>::value ||
+                          impl::HasMember_insert<CollectContainer>::value,
+                      "CollectContainer must support push_back or insert.");
+      }
     }
     return result;
   }
