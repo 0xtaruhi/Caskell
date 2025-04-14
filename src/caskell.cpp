@@ -1,5 +1,6 @@
 #include "caskell.hpp"
 #include <iostream>
+#include <utility>
 #include <vector>
 
 int add3(int a, int b, int c) { return a + b + c; }
@@ -16,6 +17,16 @@ caskell::Maybe<int> add_5_if_even(int x) {
   return caskell::Maybe<int>();
 }
 
+class Foo {
+public:
+  Foo(int x) : x_(x) {}
+
+  int add(int y) { return x_ + y; }
+
+private:
+  int x_;
+};
+
 int main() {
   auto curried_add = caskell::curry(add3);
 
@@ -28,6 +39,12 @@ int main() {
   auto add12 = add1(2);
   std::cout << add12(3) << std::endl; // 输出 6
 
+  auto curried_foo_add = caskell::curry(&Foo::add);
+  Foo foo{1};
+  auto foo_add1 = curried_foo_add(foo);
+  auto foo_add2 = foo_add1(100);
+  std::cout << foo_add2 << std::endl;
+
   auto vec = std::vector<int>{1, 2, 3, 4, 5};
   auto stream = caskell::stream(std::move(vec));
   auto result = stream.filter([](int x) { return x % 2 == 0; })
@@ -39,9 +56,14 @@ int main() {
 
   auto lazyResult = caskell::LazyStream<int>::fromRange(100)
                         .map([](int x) { return x * x; })
-                        .take(100)
-                        .reduce(0, [](int acc, int x) { return acc + x; });
-  std::cout << "Lazy Result: " << lazyResult << std::endl;
+                        .filter([](int x) { return x % 3 == 0; })
+                        .map([](int x) { return std::make_pair(x, x + 1); })
+                        .take(5);
+
+  for (auto item : lazyResult) {
+    std::cout << item.first << " " << item.second << "   ";
+  }
+  std::cout << std::endl;
 
   caskell::Maybe<int> m1(10);
   auto r1 = m1 >>= [](int x) { return safe_div(x, 2); };
