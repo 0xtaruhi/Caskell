@@ -31,16 +31,15 @@ template <typename... Ts> class Variant {
 public:
   template <typename T> Variant(T &&value) : data(std::forward<T>(value)) {}
 
-  template <typename... Handlers> auto match(Handlers &&...handlers) {
+  template <typename... Handlers> auto match(Handlers &&...handlers) const {
     return std::visit(
         [&](auto &&arg) -> decltype(auto) {
           using T = std::decay_t<decltype(arg)>;
           (
               [&] {
-                using HandlerArg =
-                    typename impl::FirstArgType<std::decay_t<Handlers>>::type;
-                if constexpr (std::is_same_v<T, HandlerArg>) {
-                  std::forward<Handlers>(handlers)(arg);
+                if constexpr (MatchedArm<T, Handlers>::isMatched) {
+                  std::forward<Handlers>(handlers)(
+                      std::forward<decltype(arg)>(arg));
                 }
               }(),
               ...);
@@ -55,8 +54,9 @@ public:
 
 private:
   template <typename T, typename Handler> struct MatchedArm {
-    using HandlerArg = typename impl::FirstArgType<Handler>::type;
-    constexpr static bool isMatched = std::is_same_v<T, HandlerArg>;
+    using HandlerArg = std::decay_t<typename impl::FirstArgType<Handler>::type>;
+    constexpr static bool isMatched =
+        std::is_same_v<std::decay_t<T>, HandlerArg>;
   };
 
   template <typename T, typename... Handlers> struct MatchedArmsCount {

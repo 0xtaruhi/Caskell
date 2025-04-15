@@ -28,7 +28,9 @@ struct HasMember_insert<T, std::void_t<decltype(std::declval<T &>().insert(
 
 } // namespace impl
 template <typename T> class RangeGenerator;
-template <typename T> class ContainerGenerator;
+// template <typename Container> class ContainerGenerator;
+template <template <typename, typename> class Container, typename T,
+          typename Alloc> class ContainerGenerator;
 template <typename Gen, typename Func> class MapGenerator;
 template <typename Gen, typename Pred> class FilterGenerator;
 template <typename Gen> class TakeGenerator;
@@ -38,9 +40,14 @@ template <typename T> struct GeneratorTraits;
 template <typename T> struct GeneratorTraits<RangeGenerator<T>> {
   using ValueType = T;
 };
-template <typename Container>
-struct GeneratorTraits<ContainerGenerator<Container>> {
-  using ValueType = typename ContainerGenerator<Container>::ValueType;
+// template <typename Container>
+// struct GeneratorTraits<ContainerGenerator<Container>> {
+//   using ValueType = typename ContainerGenerator<Container>::ValueType;
+// };
+template <template <typename, typename> class Container, typename T,
+          typename Alloc>
+struct GeneratorTraits<ContainerGenerator<Container, T, Alloc>> {
+  using ValueType = typename Container<T, Alloc>::value_type;
 };
 
 template <typename Gen, typename Func>
@@ -77,14 +84,16 @@ public:
   std::optional<T> nextImpl() const { return current_++; }
 };
 
-template <typename Container>
-class ContainerGenerator : public Generator<ContainerGenerator<Container>> {
-  using Iterator = typename Container::const_iterator;
+template <template <typename, typename> class Container, typename T,
+          typename Alloc>
+class ContainerGenerator
+    : public Generator<ContainerGenerator<Container, T, Alloc>> {
+  using Iterator = typename Container<T, Alloc>::const_iterator;
   mutable Iterator current_, end_;
 
 public:
-  using ValueType = typename Container::value_type;
-  explicit ContainerGenerator(const Container &container)
+  using ValueType = typename Container<T, Alloc>::value_type;
+  explicit ContainerGenerator(const Container<T, Alloc> &container)
       : current_(container.begin()), end_(container.end()) {}
   std::optional<ValueType> nextImpl() const {
     if (current_ == end_)

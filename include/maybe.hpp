@@ -55,7 +55,9 @@ public:
     return value_;
   }
 
-  bool has_value() const { return has_value_; }
+  bool isJust() const { return has_value_; }
+
+  bool isNothing() const { return !has_value_; }
 
   friend bool operator==(const Maybe &a, const Maybe &b) {
     if (a.has_value_ != b.has_value_)

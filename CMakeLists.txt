@@ -7,8 +7,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_executable(caskell src/caskell.cpp)
+add_library(caskell INTERFACE)
 
-target_include_directories(caskell PRIVATE include)
+target_include_directories(caskell INTERFACE 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
 
 add_subdirectory(tests)
