@@ -3,79 +3,92 @@
 #define CASKELL_MAYBE_HPP
 
 #include <cassert>
+#include <optional>
 #include <ostream>
+#include <type_traits>
 #include <utility>
 
 namespace caskell {
 
+// Maybe type implementation
 template <typename T> class Maybe {
+private:
+  std::optional<T> value;
+
 public:
-  Maybe() : has_value_(false) {}
-  Maybe(const T &value) : has_value_(true), value_(value) {}
-  Maybe(T &&value) : has_value_(true), value_(std::move(value)) {}
+  using value_type = T;
 
-  static Maybe<T> pure(const T &value) { return Maybe<T>(value); }
+  // Constructors
+  Maybe() = default;
+  explicit Maybe(T value) : value(std::move(value)) {}
 
-  template <typename Func>
-  auto map(Func func) const -> Maybe<decltype(func(std::declval<T>()))> {
-    using U = decltype(func(std::declval<T>()));
-    if (has_value_) {
-      return Maybe<U>(func(value_));
-    } else {
-      return Maybe<U>();
+  // Check if Maybe contains a value
+  bool isJust() const { return value.has_value(); }
+  bool isNothing() const { return !value.has_value(); }
+
+  // Safe value access
+  const T &operator*() const { return *value; }
+  T &operator*() { return *value; }
+
+  // Map operation (fmap)
+  template <typename F, typename = std::enable_if_t<std::is_invocable_v<F, T>>>
+  auto map(F &&f) const {
+    if (!isJust()) {
+      return Maybe<std::invoke_result_t<F, T>>();
     }
+    return Maybe<std::invoke_result_t<F, T>>(std::forward<F>(f)(*value));
   }
 
-  template <typename Func>
-  auto and_then(Func func) const -> decltype(func(std::declval<T>())) {
-    using ReturnT = decltype(func(std::declval<T>()));
-    if (has_value_) {
-      return func(value_);
-    } else {
-      return ReturnT();
+  // Bind operation (>>=)
+  template <typename F, typename Result = std::invoke_result_t<F, T>,
+            typename = std::enable_if_t<
+                std::is_same_v<Result, Maybe<typename Result::value_type>>>>
+  Result and_then(F &&f) const {
+    if (!isJust()) {
+      return Result();
     }
+    return std::forward<F>(f)(*value);
   }
 
-  template <typename Func>
-  auto operator>>=(Func func) const -> decltype(and_then(func)) {
-    return and_then(func);
-  }
-
-  template <typename Func>
-  auto operator|(Func func) const -> decltype((*this >>= func)) {
-    return *this >>= func;
-  }
-
+  // Value or default
   template <typename U> T value_or(U &&default_value) const {
-    return has_value_ ? value_ : static_cast<T>(std::forward<U>(default_value));
+    return value.value_or(std::forward<U>(default_value));
   }
 
-  const T &operator*() const {
-    assert(has_value_);
-    return value_;
+  // Operator overloads
+  template <typename F, typename = std::enable_if_t<std::is_invocable_v<F, T>>>
+  auto operator>>(F &&f) const {
+    return map(std::forward<F>(f));
   }
 
-  bool isJust() const { return has_value_; }
+  template <typename F, typename Result = std::invoke_result_t<F, T>,
+            typename = std::enable_if_t<
+                std::is_same_v<Result, Maybe<typename Result::value_type>>>>
+  Result operator>>=(F &&f) const {
+    return and_then(std::forward<F>(f));
+  }
 
-  bool isNothing() const { return !has_value_; }
+  template <typename F, typename = std::enable_if_t<std::is_invocable_v<F, T>>>
+  auto operator|(F &&f) const {
+    if (!isJust()) {
+      return std::invoke_result_t<F, T>();
+    }
+    return std::forward<F>(f)(*value);
+  }
 
   friend bool operator==(const Maybe &a, const Maybe &b) {
-    if (a.has_value_ != b.has_value_)
+    if (a.value.has_value() != b.value.has_value())
       return false;
-    if (!a.has_value_)
+    if (!a.value.has_value())
       return true;
-    return a.value_ == b.value_;
+    return a.value.value() == b.value.value();
   }
 
   friend std::ostream &operator<<(std::ostream &os, const Maybe &m) {
-    if (m.has_value_)
-      return os << "Just(" << m.value_ << ")";
+    if (m.value.has_value())
+      return os << "Just(" << m.value.value() << ")";
     return os << "Nothing";
   }
-
-private:
-  bool has_value_;
-  T value_;
 };
 
 template <typename T> inline Maybe<T> pure(T value) {
