@@ -9,5 +9,6 @@
 #include "typeclass.hpp" // IWYU pragma: keep
 #include "common_monads.hpp" // IWYU pragma: keep
 #include "utils.hpp" // IWYU pragma: keep
+#include "pattern_matching.hpp" // IWYU pragma: keep
 
 #endif // CASKELL_HPP
