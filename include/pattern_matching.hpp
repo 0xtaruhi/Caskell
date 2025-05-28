@@ -1,9 +1,9 @@
 #pragma once
 
 #include <optional>
+#include <stdexcept>
 #include <tuple>
 #include <type_traits>
-#include <stdexcept>
 
 namespace caskell {
 
@@ -83,11 +83,25 @@ template <typename... Ts> auto value(Ts... vs) {
   return ValuePattern<Ts...>(std::forward<Ts>(vs)...);
 }
 
-template <typename... Ts> auto wildcard() { return WildcardPattern<Ts...>(); }
+// Deduction guide for Match to help with wildcard and guard
+template <typename R, typename... Ts> Match(R, Ts...) -> Match<R, R, Ts...>;
 
-template <typename... Ts, typename F> auto guard(F &&pred) {
-  using GuardType = GuardPattern<std::decay_t<F>, Ts...>;
-  return GuardType(std::forward<F>(pred));
+// Wildcard pattern with type deduction
+template <typename M> auto wildcard_for(const M &) {
+  return WildcardPattern<typename M::value_type>{};
+}
+
+inline auto wildcard() {
+  return [](const auto &m) { return wildcard_for(m); };
+}
+
+// Guard pattern with type deduction
+template <typename F> auto guard(F &&pred) {
+  return [pred = std::forward<F>(pred)](const auto &m) {
+    using Match = std::decay_t<decltype(m)>;
+    using Ts = typename Match::value_type;
+    return GuardPattern<F, Ts>(pred);
+  };
 }
 
 } // namespace caskell

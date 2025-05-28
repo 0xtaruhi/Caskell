@@ -7,7 +7,7 @@ using namespace caskell;
 double mysqrt(double x) {
   double guess = 1.0;
 
-  auto iter =
+  const auto iter =
       make_y_combinator([](auto self, double x, double guess) -> double {
         const auto goodEnough = [](double x, double guess) {
           return std::abs(guess * guess - x) < 0.0001;
@@ -17,12 +17,10 @@ double mysqrt(double x) {
         };
 
         return match<double>(x, guess)
-            .with(guard<double, double>(goodEnough),
-                  [](double, double guess) { return guess; })
-            .with(wildcard<double, double>(),
-                  [&self, improve](double x, double guess) {
-                    return self(x, improve(x, guess));
-                  });
+            .with(guard(goodEnough), [](double, double guess) { return guess; })
+            .with(wildcard(), [&self, improve](double x, double guess) {
+              return self(x, improve(x, guess));
+            });
       });
 
   return iter(x, guess);

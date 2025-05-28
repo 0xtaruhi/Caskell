@@ -7,6 +7,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+option(CASKELL_BUILD_TESTS "Build tests" OFF)
+option(CASKELL_BUILD_EXAMPLES "Build examples" OFF)
+
 add_library(caskell INTERFACE)
 
 target_include_directories(caskell INTERFACE 
@@ -14,10 +17,13 @@ target_include_directories(caskell INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
-enable_testing()
-add_subdirectory(tests)
+if (CASKELL_BUILD_TESTS)
+    add_subdirectory(tests)
+endif()
 
-add_subdirectory(examples)
+if (CASKELL_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
 
 install(DIRECTORY include/ DESTINATION include)
 install(TARGETS caskell
