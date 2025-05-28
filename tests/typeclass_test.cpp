@@ -11,8 +11,8 @@ TEST_CASE("Functor") {
     CHECK(*result == 6);
 
     auto nothing = caskell::Maybe<int>();
-    auto result2 =
-        caskell::fmap<caskell::Maybe>(nothing, std::function<int(int)>(addOne));
+    auto result2 = caskell::fmap<caskell::Maybe>(
+        nothing, std::function<int(int)>(addOne));
     CHECK(result2.isNothing());
   }
 }

@@ -74,8 +74,9 @@ template <typename Container> struct Stream : public Container {
     return Stream(std::move(result));
   }
 
-  template <typename Func, typename = std::enable_if_t<
-                               std::is_invocable_v<Func, ValueType, ValueType>>>
+  template <typename Func,
+            typename
+            = std::enable_if_t<std::is_invocable_v<Func, ValueType, ValueType>>>
   auto reduce(Func func, ValueType &&init) const {
     auto it = std::forward<ValueType>(init);
     for (const auto &item : *this) {

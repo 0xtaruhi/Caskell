@@ -55,13 +55,13 @@ public:
 private:
   template <typename T, typename Handler> struct MatchedArm {
     using HandlerArg = std::decay_t<typename impl::FirstArgType<Handler>::type>;
-    constexpr static bool isMatched =
-        std::is_same_v<std::decay_t<T>, HandlerArg>;
+    constexpr static bool isMatched
+        = std::is_same_v<std::decay_t<T>, HandlerArg>;
   };
 
   template <typename T, typename... Handlers> struct MatchedArmsCount {
-    static constexpr std::size_t count =
-        (MatchedArm<T, Handlers>::isMatched + ...);
+    static constexpr std::size_t count
+        = (MatchedArm<T, Handlers>::isMatched + ...);
   };
 };
 

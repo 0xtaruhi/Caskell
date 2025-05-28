@@ -27,8 +27,8 @@ TEST_CASE("Lazy Stream") {
                           .filter([](int x) { return x % 3 == 0; })
                           .take(5)
                           .reduce(0, [](int a, int b) { return a + b; });
-    CHECK(lazyResult ==
-          9 + 36 + 81 + 144 + 225); // 0 + 3^2 + 6^2 + 9^2 + 12^2 + 15^2
+    CHECK(lazyResult
+          == 9 + 36 + 81 + 144 + 225); // 0 + 3^2 + 6^2 + 9^2 + 12^2 + 15^2
   }
 
   SUBCASE("Lazy Stream with ContainerGenerator") {
@@ -58,8 +58,8 @@ TEST_CASE("Maybe") {
     return caskell::Maybe<int>();
   };
 
-  auto result =
-      safe_div(100, 5) | add_5_if_even | caskell::curry(safe_div)(100);
+  auto result
+      = safe_div(100, 5) | add_5_if_even | caskell::curry(safe_div)(100);
   CHECK(result.value_or(-1) == 4);
 }
 

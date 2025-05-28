@@ -30,7 +30,8 @@ struct HasMember_insert<T, std::void_t<decltype(std::declval<T &>().insert(
 template <typename T> class RangeGenerator;
 // template <typename Container> class ContainerGenerator;
 template <template <typename, typename> class Container, typename T,
-          typename Alloc> class ContainerGenerator;
+          typename Alloc>
+class ContainerGenerator;
 template <typename Gen, typename Func> class MapGenerator;
 template <typename Gen, typename Pred> class FilterGenerator;
 template <typename Gen> class TakeGenerator;
@@ -209,8 +210,8 @@ public:
       } else if constexpr (impl::HasMember_insert<Container>::value) {
         container.insert(container.end(), *item);
       } else {
-        static_assert(impl::HasMember_push_back<Container>::value ||
-                          impl::HasMember_insert<Container>::value,
+        static_assert(impl::HasMember_push_back<Container>::value
+                          || impl::HasMember_insert<Container>::value,
                       "Container must have push_back or insert");
       }
     }

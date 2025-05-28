@@ -147,9 +147,9 @@ auto operator|(A &&a, F &&f) -> std::invoke_result_t<F, A> {
 } // namespace operators
 
 // Helper functions
-template <
-    template <typename> class F, typename A, typename B,
-    typename = std::enable_if_t<std::is_invocable_v<std::function<B(A)>, A>>>
+template <template <typename> class F, typename A, typename B,
+          typename
+          = std::enable_if_t<std::is_invocable_v<std::function<B(A)>, A>>>
 F<B> fmap(F<A> fa, std::function<B(A)> f) {
   return Functor<F>::fmap(fa, f);
 }
@@ -158,9 +158,9 @@ template <template <typename> class F, typename A> F<A> pure(A a) {
   return Applicative<F>::pure(std::move(a));
 }
 
-template <
-    template <typename> class F, typename A, typename B,
-    typename = std::enable_if_t<std::is_invocable_v<std::function<B(A)>, A>>>
+template <template <typename> class F, typename A, typename B,
+          typename
+          = std::enable_if_t<std::is_invocable_v<std::function<B(A)>, A>>>
 F<B> ap(F<std::function<B(A)>> ff, F<A> fa) {
   return Applicative<F>::ap(ff, fa);
 }
@@ -169,9 +169,9 @@ template <template <typename> class F, typename A> F<A> return_(A a) {
   return Monad<F>::return_(std::move(a));
 }
 
-template <
-    template <typename> class F, typename A, typename B,
-    typename = std::enable_if_t<std::is_invocable_v<std::function<F<B>(A)>, A>>>
+template <template <typename> class F, typename A, typename B,
+          typename
+          = std::enable_if_t<std::is_invocable_v<std::function<F<B>(A)>, A>>>
 F<B> bind(F<A> ma, std::function<F<B>(A)> f) {
   return Monad<F>::bind(ma, f);
 }

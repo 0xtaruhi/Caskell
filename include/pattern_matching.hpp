@@ -50,9 +50,7 @@ template <typename F> struct PatternFunction {
 
   explicit PatternFunction(F f) : func(std::move(f)) {}
 
-  template <typename M> auto operator()(M &match) const {
-    return func(match);
-  }
+  template <typename M> auto operator()(M &match) const { return func(match); }
 };
 
 // Type trait to check if a type is a pattern function
@@ -91,12 +89,11 @@ template <typename Derived, typename... Ts> struct Pattern {
   }
 
   template <typename F> auto operator>>(F &&handler) const {
-    return PatternFunction(
-        [pattern = static_cast<const Derived &>(*this),
-         handler = std::forward<F>(handler)](auto &match) {
-          match.with(pattern, handler);
-          return match;
-        });
+    return PatternFunction([pattern = static_cast<const Derived &>(*this),
+                            handler = std::forward<F>(handler)](auto &match) {
+      match.with(pattern, handler);
+      return match;
+    });
   }
 };
 
@@ -164,11 +161,11 @@ template <typename F> struct GuardMatcher {
   }
 
   template <typename F2> auto operator>>(F2 &&handler) const {
-    return PatternFunction([pattern = *this,
-                          handler = std::forward<F2>(handler)](auto &match) {
-      match.with(pattern, handler);
-      return match;
-    });
+    return PatternFunction(
+        [pattern = *this, handler = std::forward<F2>(handler)](auto &match) {
+          match.with(pattern, handler);
+          return match;
+        });
   }
 };
 
@@ -240,9 +237,7 @@ public:
     return std::any_cast<R>(std::move(*result));
   }
 
-  template <typename R> operator R() const & {
-    return convert<R>();
-  }
+  template <typename R> operator R() const & { return convert<R>(); }
 
   template <typename R> operator R() && {
     return std::move(*this).template convert<R>();
@@ -308,9 +303,7 @@ public:
     return std::any_cast<R>(std::move(*result));
   }
 
-  template <typename R> operator R() const & {
-    return convert<R>();
-  }
+  template <typename R> operator R() const & { return convert<R>(); }
 
   template <typename R> operator R() && {
     return std::move(*this).template convert<R>();
