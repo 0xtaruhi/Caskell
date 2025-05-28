@@ -52,8 +52,8 @@ template <typename R, typename... Ts> class Match {
 public:
   explicit Match(Ts... vs) : values(std::make_tuple(vs...)) {}
 
-  template <typename P, typename F> Match &with(const P &pattern, F &&handler) {
-    if (!result && pattern.matches(values)) {
+  template <typename P, typename F> Match &with(P &&pattern, F &&handler) {
+    if (!result && pattern.template matches<Ts...>(values)) {
       result = std::apply(std::forward<F>(handler), values);
     }
     return *this;
@@ -91,17 +91,31 @@ template <typename M> auto wildcard_for(const M &) {
   return WildcardPattern<typename M::value_type>{};
 }
 
+// Wildcard pattern
+struct WildcardMatcher {
+  template <typename... Ts>
+  bool matches(const std::tuple<Ts...> &) const { return true; }
+};
+
 inline auto wildcard() {
-  return [](const auto &m) { return wildcard_for(m); };
+  return WildcardMatcher{};
 }
 
-// Guard pattern with type deduction
+// Guard pattern
+template <typename F>
+struct GuardMatcher {
+  F predicate;
+
+  explicit GuardMatcher(F pred) : predicate(std::move(pred)) {}
+
+  template <typename... Ts>
+  bool matches(const std::tuple<Ts...> &values) const {
+    return std::apply(predicate, values);
+  }
+};
+
 template <typename F> auto guard(F &&pred) {
-  return [pred = std::forward<F>(pred)](const auto &m) {
-    using Match = std::decay_t<decltype(m)>;
-    using Ts = typename Match::value_type;
-    return GuardPattern<F, Ts>(pred);
-  };
+  return GuardMatcher<std::decay_t<F>>(std::forward<F>(pred));
 }
 
 } // namespace caskell
