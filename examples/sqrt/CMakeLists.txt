@@ -1,3 +1,3 @@
-add_executable(sqrt main.cpp) 
+add_executable(sqrt sqrt.cpp) 
 
 target_link_libraries(sqrt PRIVATE caskell)
