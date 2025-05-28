@@ -94,6 +94,16 @@ public:
     return cons(x, xs);
   }
 
+  // Equality comparison operator
+  friend bool operator==(const List<T> &lhs, const List<T> &rhs) {
+    return lhs.values == rhs.values;
+  }
+
+  // Inequality comparison operator
+  friend bool operator!=(const List<T> &lhs, const List<T> &rhs) {
+    return !(lhs == rhs);
+  }
+
   template <typename F> auto map(F &&f) const {
     using ResultType = std::invoke_result_t<F, T>;
     std::deque<ResultType> result;

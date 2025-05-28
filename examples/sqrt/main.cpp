@@ -16,7 +16,7 @@ double mysqrt(double x) {
           return (guess + x / guess) / 2.0;
         };
 
-        return match<double>(x, guess)
+        return match(x, guess)
             .with(guard(goodEnough), [](double, double guess) { return guess; })
             .with(wildcard(), [&self, improve](double x, double guess) {
               return self(x, improve(x, guess));
