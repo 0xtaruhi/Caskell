@@ -16,11 +16,12 @@ double mysqrt(double x) {
           return (guess + x / guess) / 2.0;
         };
 
-        return match(x, guess)
-            .with(guard(goodEnough), [](double, double guess) { return guess; })
-            .with(wildcard(), [&self, improve](double x, double guess) {
-              return self(x, improve(x, guess));
-            });
+        return match(x, guess) |
+               (guard(goodEnough) >>
+                    [](double, double guess) -> double { return guess; }) |
+               (_ >> [&](double x, double guess) -> double {
+                 return self(x, improve(x, guess));
+               });
       });
 
   return iter(x, guess);
