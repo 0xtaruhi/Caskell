@@ -159,6 +159,36 @@ template <> struct Show<int> {
   static std::string show(const int &x) { return std::to_string(x); }
 };
 
+template <> struct Show<long> {
+  static std::string show(const long &x) { return std::to_string(x); }
+};
+
+template <> struct Show<long long> {
+  static std::string show(const long long &x) { return std::to_string(x); }
+};
+
+template <> struct Show<unsigned int> {
+  static std::string show(const unsigned int &x) { return std::to_string(x); }
+};
+
+template <> struct Show<unsigned long> {
+  static std::string show(const unsigned long &x) { return std::to_string(x); }
+};
+
+template <> struct Show<unsigned long long> {
+  static std::string show(const unsigned long long &x) {
+    return std::to_string(x);
+  }
+};
+
+template <> struct Show<float> {
+  static std::string show(const float &x) { return std::to_string(x); }
+};
+
+template <> struct Show<double> {
+  static std::string show(const double &x) { return std::to_string(x); }
+};
+
 template <> struct Show<std::string> {
   static std::string show(const std::string &x) { return "\"" + x + "\""; }
 };
