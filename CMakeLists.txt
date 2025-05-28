@@ -17,6 +17,8 @@ target_include_directories(caskell INTERFACE
 enable_testing()
 add_subdirectory(tests)
 
+add_subdirectory(examples)
+
 install(DIRECTORY include/ DESTINATION include)
 install(TARGETS caskell
     EXPORT caskell-targets
