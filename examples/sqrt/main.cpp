@@ -1,33 +1,31 @@
 #include <caskell.hpp>
 #include <cmath>
-#include <functional>
 #include <iostream>
 
 using namespace caskell;
 
-// Pattern matching implementation for sqrt calculation
-template <typename T> struct SqrtState {
-  T x;
-  T guess;
-};
-
 double mysqrt(double x) {
-  SqrtState<double> initial{x, 1.0};
+  double guess = 1.0;
 
-  std::function<double(const SqrtState<double> &)> iter =
-      [&iter](const SqrtState<double> &state) -> double {
-    return match<SqrtState<double>, double>(state)
-        .with(guard<SqrtState<double>>([](const auto &s) {
-                return std::abs(s.guess * s.guess - s.x) < 0.0001;
-              }),
-              [](const auto &s) { return s.guess; })
-        .with(wildcard<SqrtState<double>>(), [&iter](const auto &s) {
-          double new_guess = (s.guess + s.x / s.guess) / 2.0;
-          return iter(SqrtState<double>{s.x, new_guess});
-        });
-  };
+  auto iter =
+      make_y_combinator([](auto self, double x, double guess) -> double {
+        const auto goodEnough = [](double x, double guess) {
+          return std::abs(guess * guess - x) < 0.0001;
+        };
+        const auto improve = [](double x, double guess) {
+          return (guess + x / guess) / 2.0;
+        };
 
-  return iter(initial);
+        return match<double>(x, guess)
+            .with(guard<double, double>(goodEnough),
+                  [](double, double guess) { return guess; })
+            .with(wildcard<double, double>(),
+                  [&self, improve](double x, double guess) {
+                    return self(x, improve(x, guess));
+                  });
+      });
+
+  return iter(x, guess);
 }
 
 int main() {

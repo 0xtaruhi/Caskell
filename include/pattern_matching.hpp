@@ -2,50 +2,56 @@
 
 #include <functional>
 #include <optional>
+#include <tuple>
 
 namespace caskell {
 
-// Pattern matching base case
-template <typename T> struct Pattern {
-  virtual bool matches(const T &value) const = 0;
+// Pattern matching base case for multiple parameters
+template <typename... Ts> struct Pattern {
+  virtual bool matches(const std::tuple<Ts...> &values) const = 0;
   virtual ~Pattern() = default;
 };
 
-// Value pattern
-template <typename T> struct ValuePattern : Pattern<T> {
-  T expected;
+// Value pattern for multiple parameters
+template <typename... Ts> struct ValuePattern : Pattern<Ts...> {
+  std::tuple<Ts...> expected;
 
-  explicit ValuePattern(T value) : expected(std::move(value)) {}
+  explicit ValuePattern(Ts... values) : expected(std::move(values)...) {}
 
-  bool matches(const T &value) const override { return value == expected; }
+  bool matches(const std::tuple<Ts...> &values) const override {
+    return values == expected;
+  }
 };
 
-// Wildcard pattern
-template <typename T> struct WildcardPattern : Pattern<T> {
-  bool matches(const T &) const override { return true; }
+// Wildcard pattern for multiple parameters
+template <typename... Ts> struct WildcardPattern : Pattern<Ts...> {
+  bool matches(const std::tuple<Ts...> &) const override { return true; }
 };
 
-// Guard pattern
-template <typename T> struct GuardPattern : Pattern<T> {
-  std::function<bool(const T &)> predicate;
+// Guard pattern for multiple parameters
+template <typename... Ts> struct GuardPattern : Pattern<Ts...> {
+  std::function<bool(const Ts &...)> predicate;
 
-  explicit GuardPattern(std::function<bool(const T &)> pred)
-      : predicate(std::move(pred)) {}
+  template <typename F>
+  explicit GuardPattern(F &&pred) : predicate(std::forward<F>(pred)) {}
 
-  bool matches(const T &value) const override { return predicate(value); }
+  bool matches(const std::tuple<Ts...> &values) const override {
+    return std::apply(predicate, values);
+  }
 };
 
-// Pattern matching expression builder
-template <typename T, typename R> class Match {
-  const T &value;
+// Pattern matching expression builder for multiple parameters
+template <typename R, typename... Ts> class Match {
+  const std::tuple<Ts...> values;
   std::optional<R> result;
 
 public:
-  explicit Match(const T &v) : value(v) {}
+  explicit Match(const Ts &...vs) : values(vs...) {}
 
-  Match &with(const Pattern<T> &pattern, std::function<R(const T &)> handler) {
-    if (!result && pattern.matches(value)) {
-      result = handler(value);
+  template <typename F>
+  Match &with(const Pattern<Ts...> &pattern, F &&handler) {
+    if (!result && pattern.matches(values)) {
+      result = std::apply(std::forward<F>(handler), values);
     }
     return *this;
   }
@@ -59,16 +65,19 @@ public:
 };
 
 // Helper functions
-template <typename T, typename R> auto match(const T &value) {
-  return Match<T, R>(value);
+template <typename R, typename... Ts> auto match(const Ts &...values) {
+  return Match<R, Ts...>(values...);
 }
 
-template <typename T> auto value(T v) { return ValuePattern<T>(std::move(v)); }
+template <typename... Ts> auto value(Ts... vs) {
+  return ValuePattern<Ts...>(std::move(vs)...);
+}
 
-template <typename T> auto wildcard() { return WildcardPattern<T>(); }
+template <typename... Ts> auto wildcard() { return WildcardPattern<Ts...>(); }
 
-template <typename T> auto guard(std::function<bool(const T &)> pred) {
-  return GuardPattern<T>(std::move(pred));
+template <typename... Ts, typename F>
+auto guard(F &&pred) {
+  return GuardPattern<Ts...>(std::forward<F>(pred));
 }
 
 } // namespace caskell
