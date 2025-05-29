@@ -1,0 +1,2 @@
+add_executable(symbolic_diff symbolic_diff.cpp)
+target_link_libraries(symbolic_diff PRIVATE caskell)

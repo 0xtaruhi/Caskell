@@ -4,11 +4,12 @@
 using namespace caskell;
 
 int factorial(int n) {
-  return match(n) | (value(0) >> [](int) { return 1; })
-         | (_ >> [](int n) { return n * factorial(n - 1); });
+  return LazyStream(RangeGenerator<int>(1)).take(n).reduce(1, [](int a, int b) {
+    return a * b;
+  });
 }
 
 int main() {
-  std::cout << factorial(5) << std::endl;
+  std::cout << factorial(10) << std::endl;
   return 0;
 }
