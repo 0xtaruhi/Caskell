@@ -1,4 +1,5 @@
-add_subdirectory(n_queens)
-add_subdirectory(sqrt)
 add_subdirectory(factorial)
 add_subdirectory(symbolic_diff)
+add_subdirectory(sqrt)
+add_subdirectory(n_queens)
+add_subdirectory(variant_match)
