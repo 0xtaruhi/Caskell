@@ -35,7 +35,8 @@ const auto queens = make_y_combinator([](auto self, int n) -> List<List<int>> {
 
 int main() {
   auto solutions = queens(8);
-  std::cout << "Solutions: " << Show<List<List<int>>>::show(solutions) << "\n";
+  std::cout << "Solutions: " << std::endl; 
+  std::cout << Show<List<List<int>>>::show(solutions) << "\n";
   std::cout << "Number of solutions: " << solutions.length() << std::endl;
   return 0;
 }
